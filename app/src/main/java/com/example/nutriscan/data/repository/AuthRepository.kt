@@ -21,4 +21,6 @@ interface AuthRepository {
     fun logout()
 
     fun getCurrentUser(): User?
+
+    fun resetPassword(email: String): Flow<Resource<String>>
 }

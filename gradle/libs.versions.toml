@@ -4,6 +4,8 @@ agp = "8.3.1"                # Tetap di versi stabil ini
 guava = "33.5.0-android"
 kotlin = "2.1.0"            # Tetap ini
 coreKtx = "1.13.1"           # TURUN DARI 1.17.0 (Agar tidak minta API 36)
+kotlinxCoroutinesAndroid = "1.10.2"
+kotlinxCoroutinesCore = "1.10.2"
 lifecycleRuntimeKtx = "2.8.4"# TURUN DARI 2.10.0
 activityCompose = "1.9.1"    # TURUN DARI 1.12.0
 composeBom = "2024.06.00"    # TURUN DARI 2024.09.00 (Agar aman)
@@ -29,6 +31,7 @@ espressoCore = "3.6.1"
 roomKtx = "2.6.1"
 roomRuntimeAndroid = "2.8.4"
 generativeai = "0.9.0"
+lifecycleRuntimeComposeAndroid = "2.8.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -66,6 +69,8 @@ androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycl
 androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 
 # ML Kit
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 play-services-mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitText" }
 
 # Coil
@@ -80,6 +85,7 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "roomRuntimeAndroid" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
+androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime.android)
     implementation(libs.generativeai)
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
 
     // Testing
     testImplementation(libs.junit)
@@ -120,4 +121,9 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(libs.androidx.material.icons.extended)
+
+    //coroutines
+    // Coroutine (WAJIB)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
 }

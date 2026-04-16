@@ -29,8 +29,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.nutriscan.common.Resource
 import com.example.nutriscan.presentation.components.ButtonPrimary
 import com.example.nutriscan.presentation.components.CustomTextField
 import com.example.nutriscan.presentation.theme.Dimens
@@ -43,35 +46,59 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit
 ) {
     val state by viewModel.authState.collectAsState()
+    val resetPasswordState by viewModel.resetPasswordState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    // State untuk kontrol Modal
+    var showForgotPasswordSheet by remember { mutableStateOf(false) }
+    var forgotPasswordEmail by remember { mutableStateOf("") }
 
-    // Efek Samping (Toast & Navigasi)
+    // Handler untuk Login & Reset Password
     LaunchedEffect(state) {
-        if (state.error != null) {
-            Toast.makeText(context, state.error, Toast.LENGTH_LONG).show()
-        }
-        if (state.user != null) {
-            Toast.makeText(context, "Login Berhasil!", Toast.LENGTH_SHORT).show()
-            onLoginSuccess()
+        state.error?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+        state.user?.let { onLoginSuccess() }
+    }
+
+    LaunchedEffect(resetPasswordState) {
+        when (val res = resetPasswordState) {
+            is Resource.Success -> {
+                Toast.makeText(context, res.data, Toast.LENGTH_LONG).show()
+                showForgotPasswordSheet = false
+                viewModel.clearResetPasswordState()
+            }
+            is Resource.Error -> {
+                Toast.makeText(context, res.message, Toast.LENGTH_LONG).show()
+                viewModel.clearResetPasswordState()
+            }
+            else -> {}
         }
     }
 
-    LoginContent(
-        isLoading = state.isLoading, // Kirim status loading
-        onLoginClick = { email, password ->
-            viewModel.login(email, password) // Panggil fungsi login asli
-        },
-        onNavigateToRegister = onNavigateToRegister
-    )
+    // Modal diletakkan di luar konten scroll agar performa stabil
+    if (showForgotPasswordSheet) {
+        ForgotPasswordBottomSheet(
+            email = forgotPasswordEmail,
+            onEmailChange = { forgotPasswordEmail = it },
+            onDismissRequest = { showForgotPasswordSheet = false },
+            isLoading = resetPasswordState is Resource.Loading,
+            onSendClick = { viewModel.resetPassword(forgotPasswordEmail) }
+        )
+    }
 
+    LoginContent(
+        isLoading = state.isLoading,
+        onLoginClick = { e, p -> viewModel.login(e, p) },
+        onNavigateToRegister = onNavigateToRegister,
+        onForgotPasswordClick = { showForgotPasswordSheet = true } // Trigger dikirim ke sini
+    )
 }
 
 @Composable
 fun LoginContent(
     isLoading: Boolean,
     onLoginClick: (String, String) -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onForgotPasswordClick: () -> Unit // Parameter ditambahkan di sini
 ) {
     // State Input
     var email by remember { mutableStateOf("") }
@@ -117,6 +144,24 @@ fun LoginContent(
                     imeAction = ImeAction.Done
                 )
             )
+
+            Spacer(modifier = Modifier.height(Dimens.SpaceSmall))
+
+            // Lupa kata sandi (Teks yang diklik memanggil onForgotPasswordClick)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = "Lupa Sandi?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.clickable {
+                        onForgotPasswordClick() // Panggil trigger dari parameter
+                    }
+                )
+            }
 
             Spacer(modifier = Modifier.height(Dimens.SpaceLarge))
 
@@ -165,9 +210,9 @@ private fun LoginScreenPrev(){
     NutritionAppTheme {
         LoginContent(
             isLoading = false,
-            onLoginClick = {_,_ ->}
-        ) { }
+            onLoginClick = {_,_ ->},
+            onNavigateToRegister = { },
+            onForgotPasswordClick = { } // Preview butuh parameter ini
+        )
     }
-
 }
-

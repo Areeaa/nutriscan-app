@@ -95,4 +95,16 @@ class AuthRepositoryImpl @Inject constructor(
 
 
     }
+
+    override fun resetPassword(email: String): Flow<Resource<String>> = callbackFlow {
+        try {
+            trySend(Resource.Loading())
+            // Mengirim instruksi reset ke Firebase
+            auth.sendPasswordResetEmail(email).await()
+            trySend(Resource.Success("Instruksi reset kata sandi telah dikirim ke email Anda."))
+        } catch (e: Exception) {
+            trySend(Resource.Error(e.localizedMessage ?: "Gagal mengirim email reset"))
+        }
+        awaitClose { }
+    }
 }

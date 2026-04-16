@@ -14,7 +14,12 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,10 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.nutriscan.R
+import com.example.nutriscan.presentation.components.CustomTextField
 import com.example.nutriscan.presentation.theme.Dimens
 import com.example.nutriscan.presentation.theme.NutritionAppTheme
 
@@ -132,6 +141,93 @@ fun AuthScreenContainer(
         }
     }
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ForgotPasswordBottomSheet(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    onDismissRequest: () -> Unit,
+    onSendClick: () -> Unit,
+    isLoading: Boolean
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
+                .padding(bottom = 32.dp) // Jarak dari sistem navigasi bawah
+        ) {
+            Text(
+                text = "Lupa Sandi",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Kami akan mengirimkan tautan untuk mengatur ulang kata sandi ke email Anda.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            CustomTextField(
+                modifier = Modifier,
+                value = email,
+                onValueChange = onEmailChange,
+                label = "Email Terdaftar",
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Done
+                )
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            CustomButton(
+                text = if (isLoading) "Mengirim..." else "Kirim Tautan",
+                onClick = onSendClick,
+                enabled = !isLoading && email.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun CustomButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier, // Beri default nilai Modifier
+    enabled: Boolean = true        // Beri default nilai true
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        // Menggunakan radius 12.dp, kamu bisa menggantinya dengan RadiusMedium dari Shape.kt
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            // Warna saat tombol didisable (misal saat loading atau email kosong)
+            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+        ),
+        modifier = modifier
+            .fillMaxWidth() // Mengisi lebar layar secara default
+            .height(50.dp)  // Tinggi standar tombol agar nyaman ditekan
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
+    }
+}
+
 
 @Preview(showBackground = true, heightDp = 800)
 @Composable
