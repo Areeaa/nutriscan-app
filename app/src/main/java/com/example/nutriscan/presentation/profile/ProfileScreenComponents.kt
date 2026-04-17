@@ -79,7 +79,6 @@ import com.example.nutriscan.domain.model.PhysicalProfile
 import com.example.nutriscan.presentation.components.CustomTextField
 import com.example.nutriscan.presentation.onboarding.SelectableOptionItem
 import com.example.nutriscan.presentation.theme.BackgroundCream
-import com.example.nutriscan.presentation.theme.NutritionAppTheme
 
 @Composable
 fun ProfileHeaderSection(
