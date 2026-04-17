@@ -102,7 +102,9 @@ fun ProfileScreen(
                     email = user?.email ?: "",
                     profilePictureUrl = user?.profilePictureUrl, // Kirim link fotonya
                     isUploadingPhoto = uploadState is Resource.Loading, // Cek status loading
-                    onEditNameClick = { /* Aksi edit nama sebelumnya */ },
+                    onEditNameClick = {
+                        sheetFieldToEdit = ProfileEditField.DISPLAY_NAME
+                    },
                     onPhotoSelected = { uri ->
                         // Panggil fungsi upload di ViewModel kamu
                         viewModel.uploadProfilePicture(uri)
