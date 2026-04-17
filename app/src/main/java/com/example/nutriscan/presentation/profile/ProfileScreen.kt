@@ -35,7 +35,6 @@ import com.example.nutriscan.presentation.profile.ProfileEditField
 import com.example.nutriscan.presentation.profile.ProfileHeaderSection
 import com.example.nutriscan.presentation.profile.ProfileTopBar
 import com.example.nutriscan.presentation.profile.ProfileViewModel
-import com.example.nutriscan.presentation.result.ResultTopBar
 import com.example.nutriscan.presentation.theme.BackgroundCream
 
 @OptIn(ExperimentalMaterial3Api::class)
