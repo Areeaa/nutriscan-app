@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material3.Card
@@ -35,24 +36,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.nutriscan.domain.model.User
 import com.example.nutriscan.presentation.theme.NutritionAppTheme
 import com.example.nutriscan.presentation.theme.PrimaryTeal
 import com.example.nutriscan.presentation.theme.SurfaceVariant
 import com.example.nutriscan.presentation.theme.TertiarySage
 import com.example.nutriscan.presentation.theme.TextPrimary
-import com.example.nutriscan.presentation.theme.TextSecondary
 import com.example.nutriscan.presentation.theme.WarningYellow
 import java.util.Calendar
 
 
 @Composable
 fun HomeHeader(user: User?, onProfileClick: () -> Unit) {
-    //menentukan sapaan berdasarkan jam di HP
+    // Menentukan sapaan berdasarkan jam di HP
     val greeting = remember {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         when (hour) {
@@ -71,32 +74,37 @@ fun HomeHeader(user: User?, onProfileClick: () -> Unit) {
             .clickable { onProfileClick() }
             .padding(vertical = 8.dp)
     ) {
-        // Placeholder Avatar
-        Box(
+
+        AsyncImage(
+            model = user?.profilePictureUrl,
+            contentDescription = "Foto Profil",
             modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape)
-                .background(SurfaceVariant)
+                .background(MaterialTheme.colorScheme.surfaceVariant), // Menggunakan warna tema sebagai background saat loading
+            contentScale = ContentScale.Crop,
+            // Tampilkan ikon orang jika URL kosong atau gagal dimuat
+            placeholder = rememberVectorPainter(Icons.Default.Person),
+            error = rememberVectorPainter(Icons.Default.Person)
         )
+
         Spacer(modifier = Modifier.width(16.dp))
+
         Column {
-            // Menampilkan sapaan dinamis (Pagi/Siang/Sore/Malam)
             Text(
                 text = greeting,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant // Sesuaikan dengan warna teks sekunder kamu
             )
-            // Menampilkan nama dari Firebase
             Text(
                 text = "${user?.displayName ?: "Pengguna"}!",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
-
 @Composable
 fun DailyTipCard(
     tipText: String,
@@ -173,7 +181,7 @@ fun DailyTipCard(
 @Composable
 fun WaterTrackerCard(glassesDrank: Int, targetGlasses: Int, onWaterClick: (Int) -> Unit) {
     Column {
-        Text(text = "Track Minum Air", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(text = "Ayo Minum Air Putih", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
