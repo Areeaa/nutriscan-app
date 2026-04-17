@@ -1,18 +1,9 @@
 package com.example.nutriscan.presentation.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,23 +11,19 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.DocumentScanner
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,17 +31,11 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.nutriscan.domain.model.User
 import com.example.nutriscan.presentation.theme.NutritionAppTheme
-import com.example.nutriscan.presentation.theme.PrimaryTeal
-import com.example.nutriscan.presentation.theme.SurfaceVariant
-import com.example.nutriscan.presentation.theme.TertiarySage
-import com.example.nutriscan.presentation.theme.TextPrimary
-import com.example.nutriscan.presentation.theme.WarningYellow
 import java.util.Calendar
-
+import com.example.nutriscan.R
 
 @Composable
 fun HomeHeader(user: User?, onProfileClick: () -> Unit) {
-    // Menentukan sapaan berdasarkan jam di HP
     val greeting = remember {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         when (hour) {
@@ -69,20 +50,18 @@ fun HomeHeader(user: User?, onProfileClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onProfileClick() }
             .padding(vertical = 8.dp)
     ) {
-
         AsyncImage(
             model = user?.profilePictureUrl,
             contentDescription = "Foto Profil",
             modifier = Modifier
-                .size(50.dp)
+                .size(54.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant), // Menggunakan warna tema sebagai background saat loading
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentScale = ContentScale.Crop,
-            // Tampilkan ikon orang jika URL kosong atau gagal dimuat
             placeholder = rememberVectorPainter(Icons.Default.Person),
             error = rememberVectorPainter(Icons.Default.Person)
         )
@@ -93,7 +72,7 @@ fun HomeHeader(user: User?, onProfileClick: () -> Unit) {
             Text(
                 text = greeting,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant // Sesuaikan dengan warna teks sekunder kamu
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = "${user?.displayName ?: "Pengguna"}!",
@@ -104,124 +83,172 @@ fun HomeHeader(user: User?, onProfileClick: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun DailyTipCard(
     tipText: String,
     isLoading: Boolean,
     onRefreshClick: () -> Unit
 ) {
-    Text(
-        text = "Tahukah Kamu?",
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = TextPrimary
-    )
-    Spacer(modifier = Modifier.height(8.dp))
+    Column {
+        Text(
+            text = "Tahukah Kamu?",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(12.dp))
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = PrimaryTeal),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Rounded.Lightbulb,
-                        contentDescription = "Tips",
-                        tint = WarningYellow,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+        Card(
+            // Diubah menjadi Primary penuh agar senada dengan BottomBar dan tombol utama
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(Color.White.copy(alpha = 0.2f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Lightbulb,
+                                contentDescription = "Tips",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Tips Hari Ini",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    if (!isLoading) {
+                        Text(
+                            text = "Refresh",
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onRefreshClick() }
+                                .padding(4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (isLoading) {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                    }
+                } else {
                     Text(
-                        text = "Tips Kesehatan Hari Ini",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        text = tipText,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 22.sp
                     )
                 }
-                // Tombol Refresh untuk minta tips baru ke Gemini
-                if (!isLoading) {
-                    Text(
-                        text = "Refresh",
-                        color = Color.White.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier
-                            .clickable { onRefreshClick() }
-                            .padding(4.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = WarningYellow, modifier = Modifier.size(24.dp))
-                }
-            } else {
-                Text(
-                    text = tipText,
-                    color = Color.White.copy(alpha = 0.9f),
-                    style = MaterialTheme.typography.bodyMedium,
-                    lineHeight = 22.sp
-                )
             }
         }
     }
 }
 
-
-
 @Composable
 fun WaterTrackerCard(glassesDrank: Int, targetGlasses: Int, onWaterClick: (Int) -> Unit) {
     Column {
-        Text(text = "Ayo Minum Air Putih", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Ayo Minum Air Putih",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(12.dp))
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = SurfaceVariant),
-            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "$glassesDrank / $targetGlasses Gelas Hari Ini",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryTeal
+                    color = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.height(12.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Looping dari 1 sampai 8
-                    for (i in 1..targetGlasses) {
-                        val isFilled = i <= glassesDrank
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(if (isFilled) TertiarySage else Color.White)
-                                // MENGIRIMKAN ANGKA GELAS YANG DIKLIK (i)
-                                .clickable { onWaterClick(i) }
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Logika pembagian 2 baris otomatis (4 item per baris)
+                val itemsPerRow = 4
+                val rows = (targetGlasses + itemsPerRow - 1) / itemsPerRow
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    for (r in 0 until rows) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            if (!isFilled) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(CircleShape)
-                                        .background(SurfaceVariant)
-                                )
+                            for (c in 0 until itemsPerRow) {
+                                val i = r * itemsPerRow + c + 1
+
+                                if (i <= targetGlasses) {
+                                    val isFilled = i <= glassesDrank
+
+                                    // Area Gelas yang bisa diklik
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable { onWaterClick(i) }
+                                            .padding(4.dp), // Jarak sentuh agar lebih nyaman
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (isFilled) {
+
+
+                                            Image(
+                                                painter = painterResource(id = R.drawable.ic_gelas_penuh),
+                                                contentDescription = "Gelas Terisi",
+                                                modifier = Modifier.size(60.dp)
+                                            )
+
+
+                                        } else {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.ic_gelas_kosong),
+                                                contentDescription = "Gelas Terisi",
+                                                modifier = Modifier.size(60.dp)
+                                            )
+
+                                        }
+                                    }
+                                } else {
+                                    // Spacer kosong untuk menjaga posisi tetap seimbang
+                                    // jika target minumnya ganjil (misal 7 gelas)
+                                    Spacer(modifier = Modifier.width(60.dp))
+                                }
                             }
                         }
                     }
@@ -229,36 +256,92 @@ fun WaterTrackerCard(glassesDrank: Int, targetGlasses: Int, onWaterClick: (Int) 
             }
         }
     }
-
 }
 
-
+// === KOMPONEN FITUR UNGGULAN (SENADA) ===
 @Composable
-fun NutritionArticleSection() {
+fun FeaturedSection(
+    onNavigateToScan: () -> Unit,
+    onNavigateToHistori: () -> Unit
+) {
     Column {
-        Text(text = "Kenali Informasi Seputar Gizi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Fitur Unggulan",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = SurfaceVariant),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(150.dp)
-            ) {}
+            // Kedua Card sekarang menggunakan warna Surface (Putih) agar seragam dengan Water Tracker
+            FeatureCard(
+                title = "Scan\nLabel AI",
+                icon = Icons.Rounded.DocumentScanner,
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToScan
+            )
 
-            Card(
-                colors = CardDefaults.cardColors(containerColor = SurfaceVariant),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(150.dp)
-            ) {}
+            FeatureCard(
+                title = "Pantau\nRiwayat",
+                icon = Icons.Rounded.History,
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToHistori
+            )
         }
     }
 }
 
+@Composable
+fun FeatureCard(
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        // Background putih bersih dengan elevasi halus
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = modifier
+            .height(130.dp)
+            .clickable { onClick() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    // Ikon dibungkus warna abu-abu lembut (surfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    // Icon menggunakan warna Primary agar senada
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                lineHeight = 20.sp
+            )
+        }
+    }
+}
 
 @Composable
 fun HomeBottomBar(
@@ -273,11 +356,11 @@ fun HomeBottomBar(
         contentAlignment = Alignment.BottomCenter
     ) {
         Surface(
-            color = PrimaryTeal,
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+            color = MaterialTheme.colorScheme.primary,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(95.dp)
+                .height(90.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -286,22 +369,19 @@ fun HomeBottomBar(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1. Tombol Home (Kiri)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp)) // Biar efek ripple kliknya rapi
+                        .clip(RoundedCornerShape(8.dp))
                         .clickable { onNavigateToHome() }
-                        .padding(8.dp) // Jarak aman untuk sentuhan jari
+                        .padding(8.dp)
                 ) {
-                    Icon(Icons.Default.Home, contentDescription = "Home", tint = Color.White)
-                    Text("Home", color = Color.White, fontSize = 10.sp)
+                    Icon(Icons.Default.Home, contentDescription = "Home", tint = MaterialTheme.colorScheme.onPrimary)
+                    Text("Home", color = MaterialTheme.colorScheme.onPrimary, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                 }
 
-                // Spacer tengah untuk memberi ruang pada FAB Scan
                 Spacer(modifier = Modifier.width(50.dp))
 
-                // 2. Tombol Histori (Kanan)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
@@ -309,92 +389,39 @@ fun HomeBottomBar(
                         .clickable { onNavigateToHistori() }
                         .padding(8.dp)
                 ) {
-                    Icon(Icons.Default.List, contentDescription = "Histori", tint = Color.White.copy(alpha = 0.6f))
-                    Text("Histori", color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                    Icon(Icons.Default.List, contentDescription = "Histori", tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f))
+                    Text("Histori", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }
 
-        // 3. Tombol FAB Scan di tengah atas
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 20.dp)
         ) {
             FloatingActionButton(
                 onClick = onScanClick,
-                containerColor = Color.White,
-                contentColor = PrimaryTeal,
-                shape = RoundedCornerShape(16.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary,
+                shape = CircleShape,
                 modifier = Modifier
-                    .size(65.dp)
-                    .offset(y = (-16).dp)
+                    .size(68.dp)
+                    .offset(y = (-12).dp)
             ) {
                 Icon(Icons.Rounded.DocumentScanner, contentDescription = "Scan", modifier = Modifier.size(32.dp))
             }
-            Text("Scan Label", color = Color.White, fontSize = 10.sp)
         }
     }
 }
 
-
-
-@Preview(showBackground = true, backgroundColor = 0xFFF9F8F6)
-@Composable
-fun HomeHeaderPreview() {
-    NutritionAppTheme {
-        // Pakai padding biar kelihatan jaraknya di preview
-        Box(modifier = Modifier.padding(16.dp)) {
-            HomeHeader(user = null, onProfileClick = {})
-        }
-    }
-
-}
-
-
-@Preview(showBackground = true, backgroundColor = 0xFFF9F8F6)
-@Composable
-fun WaterTrackerCardPreview() {
-    NutritionAppTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
-            // Contoh kalau udah minum 4 gelas dari target 8 gelas
-            WaterTrackerCard(
-                glassesDrank = 4, targetGlasses = 8,
-                onWaterClick = {}
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFF9F8F6)
-@Composable
-fun NutritionArticleSectionPreview() {
-    NutritionAppTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
-            NutritionArticleSection()
-        }
-    }
-
-}
 
 @Preview(showBackground = true)
 @Composable
-fun HomeBottomBarPreview() {
-    NutritionAppTheme {
-        HomeBottomBar(
-            onScanClick = {},
-            onNavigateToHome = {},
-            onNavigateToHistori = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun DailyTipPrev() {
-    NutritionAppTheme {
-        DailyTipCard(
-            tipText = "Kamu tau tidak ini semua kan tidak ada yang abadi",
-            isLoading = false
+private fun WaterTrackPrev() {
+    NutritionAppTheme { 
+        WaterTrackerCard(
+            glassesDrank = 2,
+            targetGlasses = 8
         ) { }
     }
 }

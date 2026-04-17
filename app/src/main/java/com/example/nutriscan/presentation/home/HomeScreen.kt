@@ -3,6 +3,7 @@ package com.example.nutriscan.presentation.home
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -55,8 +56,6 @@ fun HomeContent(
     onNavigateToHome: () -> Unit,
     onNavigateToHistori: () -> Unit,
     onRefreshTip: () -> Unit,
-
-    // 2. PERUBAHAN DI SINI: Ubah tipe data jadi (Int) -> Unit
     onWaterClick: (Int) -> Unit
 ) {
     Scaffold(
@@ -66,7 +65,8 @@ fun HomeContent(
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToHistori = onNavigateToHistori
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background // Background kalem
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -82,7 +82,7 @@ fun HomeContent(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 2. Daily Tip
+            // 2. Daily Tip (Desain Baru)
             DailyTipCard(
                 tipText = dailyTip,
                 isLoading = isTipLoading,
@@ -100,8 +100,11 @@ fun HomeContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 4. Bagian Artikel/Info Gizi
-            NutritionArticleSection()
+            // 4. Fitur Unggulan (Menggantikan Artikel Gizi)
+            FeaturedSection(
+                onNavigateToScan = onNavigateToScan,
+                onNavigateToHistori = onNavigateToHistori
+            )
 
             Spacer(modifier = Modifier.height(100.dp)) // Spasi aman dari Bottom Bar
         }
