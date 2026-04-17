@@ -1,24 +1,38 @@
 package com.example.nutriscan.data.repository
 
+import android.content.Context // <-- INI YANG BENAR
+import android.net.Uri
 import com.example.nutriscan.common.Resource
+import com.example.nutriscan.data.network.CloudinaryApi
 import com.example.nutriscan.domain.model.User
 import com.example.nutriscan.domain.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
+    private val cloudinaryApi: CloudinaryApi,
+    private val context: Context
 ) : UserRepository {
+
+    private val CLOUD_NAME = "drsr72xr8"
+    private val UPLOAD_PRESET = "ml_default"
 
     override suspend fun saveUser(user: User): Resource<Boolean> {
         return try {
-            // Simpan ke collection "users" dengan ID dokumen = UID User
-            // SetOptions.merge() penting agar jika data sudah ada, tidak terhapus total
             firestore.collection("users")
                 .document(user.uid)
                 .set(user, SetOptions.merge())
@@ -36,7 +50,6 @@ class UserRepositoryImpl @Inject constructor(
 
         val docRef = firestore.collection("users").document(uid)
 
-        // Menggunakan SnapshotListener untuk Realtime Updates
         val listener = docRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(Resource.Error(error.localizedMessage ?: "Gagal mengambil data"))
@@ -45,7 +58,6 @@ class UserRepositoryImpl @Inject constructor(
 
             if (snapshot != null && snapshot.exists()) {
                 try {
-                    // Otomatis convert JSON Firestore ke Object User Kotlin
                     val user = snapshot.toObject(User::class.java)
                     if (user != null) {
                         trySend(Resource.Success(user))
@@ -60,7 +72,6 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
 
-        // Tutup listener jika Flow berhenti (agar tidak memory leak)
         awaitClose { listener.remove() }
     }
 
@@ -77,7 +88,6 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun deleteUserData(uid: String): Resource<Unit> {
         return try {
-            // Menghapus dokumen user di Firestore
             firestore.collection("users").document(uid).delete()
             Resource.Success(Unit)
         } catch (e: Exception) {
@@ -85,5 +95,44 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun uploadProfilePicture(uri: Uri): Flow<Resource<String>> = callbackFlow {
+        try {
+            trySend(Resource.Loading())
+            val uid = auth.currentUser?.uid ?: throw Exception("Pengguna belum login")
 
+            val file = getFileFromUri(context, uri) ?: throw Exception("Gagal membaca gambar")
+
+            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+            val preset = UPLOAD_PRESET.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val response = cloudinaryApi.uploadImage(CLOUD_NAME, body, preset)
+            val downloadUrl = response.secureUrl
+
+            firestore.collection("users").document(uid)
+                .update("profilePictureUrl", downloadUrl).await()
+
+            file.delete()
+
+            trySend(Resource.Success(downloadUrl))
+        } catch (e: Exception) {
+            trySend(Resource.Error(e.localizedMessage ?: "Gagal mengunggah foto profil"))
+        }
+        awaitClose { }
+    }
+
+    private fun getFileFromUri(context: Context, uri: Uri): File? {
+        val contentResolver = context.contentResolver
+        val tempFile = File(context.cacheDir, "temp_profile_pic.jpg")
+        try {
+            val inputStream = contentResolver.openInputStream(uri) ?: return null
+            val outputStream = FileOutputStream(tempFile)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            return tempFile
+        } catch (e: Exception) {
+            return null
+        }
+    }
 }

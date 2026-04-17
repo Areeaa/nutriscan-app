@@ -1,5 +1,6 @@
 package com.example.nutriscan.domain.repository
 
+import android.net.Uri
 import com.example.nutriscan.common.Resource
 import com.example.nutriscan.domain.model.User
 import kotlinx.coroutines.flow.Flow
@@ -14,4 +15,6 @@ interface UserRepository {
     suspend fun updateUserField(uid: String, fieldPath: String, value: Any): Resource<Unit>
 
     suspend fun deleteUserData(uid: String): Resource<Unit>
+
+    fun uploadProfilePicture(uri: Uri): Flow<Resource<String>>
 }

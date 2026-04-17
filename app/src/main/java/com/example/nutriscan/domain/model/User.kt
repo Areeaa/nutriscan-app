@@ -4,6 +4,7 @@ data class User(
     val uid: String = "",
     val displayName: String = "",
     val email: String = "",
+    val profilePictureUrl: String? = null,
     val physicalProfile: PhysicalProfile = PhysicalProfile(),
     val healthConfig: HealthConfig = HealthConfig(),
     val isOnboardingFinished: Boolean = false

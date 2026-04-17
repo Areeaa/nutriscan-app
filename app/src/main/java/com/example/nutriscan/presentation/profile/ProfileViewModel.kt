@@ -1,5 +1,6 @@
 package com.example.nutriscan.presentation.profile
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutriscan.common.Resource
@@ -22,6 +23,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _userState = MutableStateFlow<User?>(null)
     val userState = _userState.asStateFlow()
+
+    private val _uploadPhotoState = MutableStateFlow<Resource<String>?>(null)
+    val uploadPhotoState = _uploadPhotoState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -129,5 +133,23 @@ class ProfileViewModel @Inject constructor(
                 onError("Sesi pengguna tidak valid.")
             }
         }
+    }
+
+    fun uploadProfilePicture(uri: Uri) {
+        viewModelScope.launch {
+            userRepository.uploadProfilePicture(uri).collect { result ->
+                _uploadPhotoState.value = result
+
+                // Jika sukses, kita wajib me-refresh data user agar foto baru muncul
+                if (result is Resource.Success) {
+                    // Panggil fungsi untuk mengambil ulang data user dari Firestore di sini
+                    // Contoh: getUserProfile()
+                }
+            }
+        }
+    }
+
+    fun clearUploadPhotoState() {
+        _uploadPhotoState.value = null
     }
 }
