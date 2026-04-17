@@ -1,5 +1,9 @@
 package com.example.nutriscan.presentation.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -27,6 +33,7 @@ import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.filled.Warning
@@ -35,6 +42,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,7 +50,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,34 +65,99 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.nutriscan.domain.model.HealthConfig
+import com.example.nutriscan.domain.model.PhysicalProfile
 import com.example.nutriscan.presentation.components.CustomTextField
 import com.example.nutriscan.presentation.onboarding.SelectableOptionItem
 import com.example.nutriscan.presentation.theme.BackgroundCream
+import com.example.nutriscan.presentation.theme.NutritionAppTheme
 
 @Composable
 fun ProfileHeaderSection(
     name: String,
     email: String,
-    onEditNameClick: () -> Unit
+    profilePictureUrl: String?,
+    isUploadingPhoto: Boolean = false,
+    onEditNameClick: () -> Unit,
+    onPhotoSelected: (Uri) -> Unit
 ) {
+    // Launcher untuk membuka galeri foto bawaan HP
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        // Jika user memilih gambar (uri tidak null), kirim Uri tersebut ke fungsi onPhotoSelected
+        uri?.let { onPhotoSelected(it) }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Placeholder Foto Profil
+
+        // Kotak Foto Profil yang sudah diperbarui
         Box(
             modifier = Modifier
                 .size(70.dp)
-                .clip(CircleShape)
-                .background(Color.LightGray)
-        )
+                .clickable {
+                    // Cegah membuka galeri jika foto sedang dalam proses upload
+                    if (!isUploadingPhoto) {
+                        galleryLauncher.launch("image/*")
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            // Memuat gambar dari URL menggunakan Coil
+            AsyncImage(
+                // Jika profilePictureUrl null, kita panggil ikon orang (Person) sebagai default
+                model = profilePictureUrl ?: "",
+                contentDescription = "Foto Profil",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+                error = rememberVectorPainter(Icons.Default.Person),
+                placeholder = rememberVectorPainter(Icons.Default.Person)
+            )
+
+            // Ikon Kamera kecil di pojok kanan bawah
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = "Ubah Foto",
+                tint = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    .padding(4.dp)
+                    .size(14.dp) // Ukuran ikon diperkecil agar pas
+            )
+
+            // Loading Spinner transparan jika sedang upload
+            if (isUploadingPhoto) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.4f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -114,7 +186,7 @@ fun ProfileHeaderSection(
 
 @Composable
 fun PhysicalProfileCard(
-    profile: com.example.nutriscan.domain.model.PhysicalProfile,
+    profile: PhysicalProfile,
     onItemClick: (ProfileEditField) -> Unit
 ) {
     Card(
@@ -157,7 +229,7 @@ fun PhysicalProfileCard(
 
 @Composable
 fun HealthConfigCard(
-    config: com.example.nutriscan.domain.model.HealthConfig, // Pastikan import modelnya sesuai
+    config: HealthConfig,
     onItemClick: (ProfileEditField) -> Unit
 ) {
     Card(
@@ -235,7 +307,7 @@ fun ActionButtonsSection(onLogoutClick: () -> Unit, onDeleteAccountClick: () -> 
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(25.dp),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red)
+            border = BorderStroke(1.dp, Color.Red)
         ) {
             Text("Keluar", fontWeight = FontWeight.Bold)
         }
@@ -256,7 +328,7 @@ fun EditProfileBottomSheet(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
-    // --- 1. DATA SESUAI ONBOARDING KAMPUS ---
+    // --- 1. DATA SESUAI ONBOARDING  ---
     val genderOptions = listOf("Laki-laki", "Perempuan")
     val goalOptions = listOf("Makan Lebih Sehat", "Membangun Otot", "Kontrol Berat Badan", "Kelola Penyakit")
     val diseaseOptions = listOf("Diabetes", "Hipertensi", "Kolesterol", "Tidak Satupun")
@@ -454,7 +526,7 @@ fun DeleteAccountBottomSheet(
                 text = "Semua data profil dan riwayat scan label Anda akan dihapus selamanya dan tidak dapat dikembalikan. Apakah Anda yakin?",
                 fontSize = 14.sp,
                 color = Color.Gray,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(32.dp))

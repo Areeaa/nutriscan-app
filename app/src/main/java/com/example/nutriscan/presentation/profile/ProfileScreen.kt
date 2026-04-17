@@ -1,3 +1,7 @@
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,7 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.nutriscan.common.Resource
 import com.example.nutriscan.presentation.profile.ActionButtonsSection
 import com.example.nutriscan.presentation.profile.DeleteAccountBottomSheet
 import com.example.nutriscan.presentation.profile.EditProfileBottomSheet
@@ -49,6 +56,29 @@ fun ProfileScreen(
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    val context = LocalContext.current
+    val uploadState by viewModel.uploadPhotoState.collectAsState()
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.uploadProfilePicture(it) }
+    }
+
+    LaunchedEffect(uploadState) {
+        when (val state = uploadState) {
+            is Resource.Success -> {
+                Toast.makeText(context, "Foto profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                viewModel.clearUploadPhotoState()
+            }
+            is Resource.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                viewModel.clearUploadPhotoState()
+            }
+            else -> {}
+        }
+    }
+
     Scaffold(
         topBar = {
             ProfileTopBar(onNavigateBack = onNavigateBack)
@@ -69,9 +99,15 @@ fun ProfileScreen(
             ) {
                 // Tampilkan Nama & Email dari Auth/Database
                 ProfileHeaderSection(
-                    name = user!!.displayName.ifEmpty { "Pengguna NutriScan" },
-                    email = user!!.email,
-                    onEditNameClick = { sheetFieldToEdit = ProfileEditField.DISPLAY_NAME }
+                    name = user?.displayName ?: "Pengguna",
+                    email = user?.email ?: "",
+                    profilePictureUrl = user?.profilePictureUrl, // Kirim link fotonya
+                    isUploadingPhoto = uploadState is Resource.Loading, // Cek status loading
+                    onEditNameClick = { /* Aksi edit nama sebelumnya */ },
+                    onPhotoSelected = { uri ->
+                        // Panggil fungsi upload di ViewModel kamu
+                        viewModel.uploadProfilePicture(uri)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
