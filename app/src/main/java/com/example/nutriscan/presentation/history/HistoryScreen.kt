@@ -1,5 +1,6 @@
 package com.example.nutriscan.presentation.history
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,35 +41,47 @@ fun HistoryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Riwayat Scan Label", fontWeight = FontWeight.Bold) },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Riwayat Scan",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Kembali",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background // PureWhite
+                )
             )
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 24.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 1. Komponen Search Bar
+            // Search Bar dengan border halus
             HistorySearchBar(
                 query = searchQuery,
                 onQueryChange = { viewModel.onSearchQueryChanged(it) }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // 2. Komponen Filter Bulan & Tahun
+            // Filter Bulan Tahun yang lebih clean
             MonthYearFilter(
                 monthName = monthNames[selectedMonth],
                 year = selectedYear,
@@ -77,14 +89,17 @@ fun HistoryScreen(
                 onNextClick = { viewModel.nextMonth() }
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 3. Komponen Kartu Total Scan
-            TotalScanCard(total = filteredHistory.size)
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 4. Komponen Daftar Riwayat
+            // Info Ringkas (Ganti dari Card Besar ke Row Minimalis)
+            TotalScanRow(total = filteredHistory.size)
+
+            Divider(
+                modifier = Modifier.padding(vertical = 16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant // SoftGray
+            )
+
+            // Daftar Riwayat
             HistoryList(
                 isLoading = isLoading,
                 historyList = filteredHistory,
@@ -94,24 +109,33 @@ fun HistoryScreen(
     }
 }
 
-// ==========================================
-// KOMPONEN-KOMPONEN UI HISTORY SCREEN
-// ==========================================
-
 @Composable
 fun HistorySearchBar(query: String, onQueryChange: (String) -> Unit) {
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
-        placeholder = { Text("Cari", color = Color.Gray) },
-        trailingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
+        placeholder = {
+            Text(
+                "Cari riwayat...",
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // TextSub
+                fontSize = 14.sp
+            )
+        },
+        leadingIcon = {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary, // AccentGreen
+                modifier = Modifier.size(20.dp)
+            )
+        },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(25.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedBorderColor = Color.LightGray,
-            focusedBorderColor = Color(0xFF4A707A),
-            unfocusedContainerColor = Color.White,
-            focusedContainerColor = Color.White
+            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            focusedContainerColor = MaterialTheme.colorScheme.background
         ),
         singleLine = true
     )
@@ -121,39 +145,49 @@ fun HistorySearchBar(query: String, onQueryChange: (String) -> Unit) {
 fun MonthYearFilter(monthName: String, year: Int, onPreviousClick: () -> Unit, onNextClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPreviousClick) {
-            Icon(Icons.Default.ChevronLeft, contentDescription = "Bulan Sebelumnya")
+            Icon(Icons.Default.ChevronLeft, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
         }
         Text(
-            text = "$monthName, $year",
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
+            text = "$monthName $year",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
         IconButton(onClick = onNextClick) {
-            Icon(Icons.Default.ChevronRight, contentDescription = "Bulan Selanjutnya")
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
 
 @Composable
-fun TotalScanCard(total: Int) {
-    Card(
+fun TotalScanRow(total: Int) {
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF4A707A))
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Total Scan", color = Color.White, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (total == 0) "Tidak Ada" else "$total Label",
-                color = Color.White,
-                fontSize = 14.sp
-            )
-        }
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Ditemukan ",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp
+        )
+        Text(
+            text = "$total Label",
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp
+        )
     }
 }
 
@@ -161,16 +195,32 @@ fun TotalScanCard(total: Int) {
 fun HistoryList(isLoading: Boolean, historyList: List<ScanHistory>, onItemClick: (String) -> Unit) {
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 2.dp
+            )
         }
     } else if (historyList.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Belum ada riwayat di bulan ini.", color = Color.Gray)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "Kosong",
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                "Tidak ada riwayat bulan ini",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 13.sp
+            )
         }
     } else {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 80.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 32.dp)
         ) {
             items(historyList) { history ->
                 HistoryItemCard(history = history, onClick = { onItemClick(history.id) })
@@ -181,27 +231,47 @@ fun HistoryList(isLoading: Boolean, historyList: List<ScanHistory>, onItemClick:
 
 @Composable
 fun HistoryItemCard(history: ScanHistory, onClick: () -> Unit) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .clickable { onClick() }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        // Indikator Visual Kecil di Samping
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = history.labelName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Total Energi : ${history.totalEnergi}", color = Color.Gray, fontSize = 12.sp)
-            }
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Detail", tint = Color.Gray)
+                .width(4.dp)
+                .height(40.dp)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    RoundedCornerShape(2.dp)
+                )
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = history.labelName,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+            Text(
+                text = "Energi: ${history.totalEnergi} kkal",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
         }
+
+        Icon(
+            Icons.Default.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
