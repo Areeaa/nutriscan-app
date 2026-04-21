@@ -22,26 +22,33 @@ import com.example.nutriscan.presentation.history.HistoryViewModel
 import com.example.nutriscan.presentation.profile.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+import com.example.nutriscan.presentation.splash.SplashScreen
+
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val currentUser = FirebaseAuth.getInstance().currentUser
 
-    // Tentukan halaman pertama (start destination) secara dinamis
-    val startRoute = if (currentUser != null) {
-        Screen.Home.route   // Kalau sesi ada, ke home
-    } else {
-        Screen.Login.route  // Kalau sesi kosong, ke login
-    }
-
     NavHost(
         navController = navController,
-        startDestination = startRoute
+        startDestination = Screen.Splash.route
     ) {
 
         // ==========================================
-        // 1. AUTHENTICATION & ONBOARDING
+        // 0. SPLASH SCREEN
         // ==========================================
+
+        composable(route = Screen.Splash.route) {
+            SplashScreen(
+                onSplashFinished = {
+                    val destination = if (currentUser != null) Screen.Home.route else Screen.Login.route
+                    navController.navigate(destination) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
 
         composable(route = Screen.Login.route) {
             LoginScreen(

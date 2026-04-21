@@ -1,6 +1,7 @@
 package com.example.nutriscan.presentation.navigation
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash_screen")
     object Login : Screen("login_screen")
     object Register : Screen("register_screen")
     object Onboarding : Screen(route = "onboarding_screen")

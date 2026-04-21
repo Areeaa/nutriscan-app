@@ -199,7 +199,7 @@ fun WaterTrackerCard(glassesDrank: Int, targetGlasses: Int, onWaterClick: (Int) 
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Logika pembagian 2 baris otomatis (4 item per baris)
                 val itemsPerRow = 4
