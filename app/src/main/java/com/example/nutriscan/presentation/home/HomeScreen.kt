@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nutriscan.domain.model.User
+import com.example.nutriscan.presentation.theme.BackgroundCream
 
 @Composable
 fun HomeScreen(
@@ -22,13 +23,11 @@ fun HomeScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToHistori: () -> Unit
 ) {
-    // Ambil semua data dari ViewModel
     val user by viewModel.userState.collectAsState()
     val waterCount by viewModel.waterCount.collectAsState()
     val dailyTip by viewModel.dailyTip.collectAsState()
     val isTipLoading by viewModel.isTipLoading.collectAsState()
 
-    // Lempar data ke Stateless Component
     HomeContent(
         user = user,
         waterCount = waterCount,
@@ -39,8 +38,6 @@ fun HomeScreen(
         onNavigateToHome = onNavigateToHome,
         onNavigateToHistori = onNavigateToHistori,
         onRefreshTip = { viewModel.fetchDailyTip() },
-
-        // 1. PERUBAHAN DI SINI: Tangkap 'index' dan lempar ke ViewModel
         onWaterClick = { index -> viewModel.updateWater(index) }
     )
 }
@@ -66,47 +63,44 @@ fun HomeContent(
                 onNavigateToHistori = onNavigateToHistori
             )
         },
-        containerColor = MaterialTheme.colorScheme.background // Background kalem
+        containerColor = BackgroundCream
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // 1. Bagian Header
+            // 1. Gradient header (full width, no horizontal padding)
             HomeHeader(user = user, onProfileClick = onNavigateToProfile)
 
-            Spacer(modifier = Modifier.height(32.dp))
+            // Content with padding
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // 2. Daily Tip (Desain Baru)
-            DailyTipCard(
-                tipText = dailyTip,
-                isLoading = isTipLoading,
-                onRefreshClick = onRefreshTip
-            )
+                DailyTipCard(
+                    tipText = dailyTip,
+                    isLoading = isTipLoading,
+                    onRefreshClick = onRefreshTip
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // 3. Bagian Track Minum Air
-            WaterTrackerCard(
-                glassesDrank = waterCount,
-                targetGlasses = 8,
-                onWaterClick = onWaterClick
-            )
+                WaterTrackerCard(
+                    glassesDrank = waterCount,
+                    targetGlasses = 8,
+                    onWaterClick = onWaterClick
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // 4. Fitur Unggulan (Menggantikan Artikel Gizi)
-            FeaturedSection(
-                onNavigateToScan = onNavigateToScan,
-                onNavigateToHistori = onNavigateToHistori
-            )
+                FeaturedSection(
+                    onNavigateToScan = onNavigateToScan,
+                    onNavigateToHistori = onNavigateToHistori
+                )
 
-            Spacer(modifier = Modifier.height(100.dp)) // Spasi aman dari Bottom Bar
+                Spacer(modifier = Modifier.height(100.dp))
+            }
         }
     }
 }

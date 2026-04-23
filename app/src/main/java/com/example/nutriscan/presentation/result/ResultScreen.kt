@@ -1,15 +1,18 @@
 package com.example.nutriscan.presentation.result
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,7 +30,6 @@ fun ResultScreen(
     onRetake: () -> Unit,
     onSave: (String) -> Unit
 ) {
-
     val capturedImage by viewModel.capturedImage.collectAsState()
     val detectedNutrients by viewModel.detectedNutrients.collectAsState()
     val recommendation by viewModel.recommendation.collectAsState()
@@ -44,12 +46,8 @@ fun ResultScreen(
             onRetake()
         },
         onSave = onSave,
-        onEditNutrient = { name, newValue ->
-            viewModel.updateNutrientValue(name, newValue)
-        },
-        onGenerateAI = {
-            viewModel.generateRecommendationManual()
-        }
+        onEditNutrient = { name, newValue -> viewModel.updateNutrientValue(name, newValue) },
+        onGenerateAI = { viewModel.generateRecommendationManual() }
     )
 }
 
@@ -66,7 +64,6 @@ fun ResultContent(
     onEditNutrient: (String, Float) -> Unit,
     onGenerateAI: () -> Unit
 ) {
-
     var showBottomSheet by remember { mutableStateOf(false) }
     var labelName by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -87,19 +84,22 @@ fun ResultContent(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item { Spacer(Modifier.height(16.dp)) }
 
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
-            item {
-                CapturedImageSection(bitmap = capturedImage)
-            }
+            item { CapturedImageSection(bitmap = capturedImage) }
 
             item {
                 Text(
-                    text = "Rincian Hasil (Ketuk untuk Edit)",
+                    "Rincian Hasil",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Ketuk baris untuk mengoreksi nilai",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
                 )
             }
 
@@ -107,7 +107,7 @@ fun ResultContent(
                 item {
                     Text(
                         "Data gizi tidak terdeteksi",
-                        color = Color.Gray,
+                        color = TextSecondary,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
@@ -127,28 +127,40 @@ fun ResultContent(
 
             item {
                 Text(
-                    text = "Rekomendasi Konsumsi",
+                    "Rekomendasi Konsumsi",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
             }
 
-            item {
-                RecommendationBox(text = recommendation)
-            }
+            item { RecommendationBox(text = recommendation) }
 
+            // Gradient AI button
             item {
-                Button(
-                    onClick = onGenerateAI,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !recommendation.contains("Sedang menganalisis"),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (!recommendation.contains("Sedang menganalisis")) GradientWarm
+                            else androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                listOf(Color(0xFFBBCCCE), Color(0xFFCCD5D5))
+                            )
+                        )
+                        .clickable(enabled = !recommendation.contains("Sedang menganalisis")) {
+                            onGenerateAI()
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Minta Rekomendasi AI", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(
+                        "🤖  Analisis dengan AI",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        letterSpacing = 0.3.sp
+                    )
                 }
             }
 
@@ -160,89 +172,125 @@ fun ResultContent(
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(32.dp)) }
+            item { Spacer(Modifier.height(32.dp)) }
         }
     }
 
-    // ===== EDIT DIALOG =====
+    // ── Edit dialog ──
     if (showEditDialog && selectedNutrient != null) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Koreksi ${selectedNutrient!!.name}", fontWeight = FontWeight.Bold) },
+            title = {
+                Text("Koreksi ${selectedNutrient!!.name}", fontWeight = FontWeight.Bold, color = TextPrimary)
+            },
             text = {
                 OutlinedTextField(
                     value = editValueText,
                     onValueChange = { editValueText = it },
-                    label = { Text("Masukkan Angka yang Benar") },
+                    label = { Text("Masukkan angka yang benar") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryTeal,
+                        unfocusedBorderColor = BorderColor
+                    )
                 )
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        val newValue = editValueText.toFloatOrNull() ?: 0f
-                        onEditNutrient(selectedNutrient!!.name, newValue)
-                        showEditDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal)
-                ) { Text("Simpan") }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(GradientButton)
+                        .clickable {
+                            val newValue = editValueText.toFloatOrNull() ?: 0f
+                            onEditNutrient(selectedNutrient!!.name, newValue)
+                            showEditDialog = false
+                        }
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                ) {
+                    Text("Simpan", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showEditDialog = false }) {
-                    Text("Batal", color = TextPrimary)
+                    Text("Batal", color = TextSecondary)
                 }
             },
-            containerColor = Color.White
+            containerColor = SurfaceWhite,
+            shape = RoundedCornerShape(20.dp)
         )
     }
 
-    // ===== BOTTOM SHEET =====
+    // ── Save bottom sheet ──
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = { showBottomSheet = false; labelName = "" },
             sheetState = sheetState,
-            containerColor = Color.White
+            containerColor = SurfaceWhite,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(horizontal = 28.dp)
+                    .padding(top = 8.dp, bottom = 36.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
+                Text("💾", fontSize = 32.sp)
+                Spacer(Modifier.height(10.dp))
                 Text(
-                    "Ingin Menyimpan Hasil Scan?",
+                    "Simpan Hasil Scan",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = TextPrimary
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Beri nama label agar mudah dikenali di riwayat",
+                    color = TextSecondary,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
                 OutlinedTextField(
                     value = labelName,
                     onValueChange = { labelName = it },
-                    placeholder = { Text("Masukkan Nama Label...") },
+                    placeholder = { Text("Nama label makanan…", color = TextTertiary) },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryTeal,
+                        unfocusedBorderColor = BorderColor
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
 
-                Button(
-                    onClick = {
-                        showBottomSheet = false
-                        onSave(labelName)
-                        labelName = ""
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = labelName.isNotBlank()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (labelName.isNotBlank()) GradientButton
+                            else androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                listOf(Color(0xFFBBCCCE), Color(0xFFCCD5D5))
+                            )
+                        )
+                        .clickable(enabled = labelName.isNotBlank()) {
+                            showBottomSheet = false
+                            onSave(labelName)
+                            labelName = ""
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Simpan")
+                    Text("Simpan", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
