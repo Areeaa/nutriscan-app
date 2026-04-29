@@ -121,6 +121,14 @@ class ScannerViewModel @Inject constructor(
         return false
     }
 
+    /**
+     * Called after the user applies crop/rotation in ImageEditorContent.
+     * Replaces the stored bitmap with the edited version before OCR processing.
+     */
+    fun onEditedImageConfirmed(bitmap: Bitmap) {
+        _capturedImage.value = bitmap
+    }
+
     fun clearCapturedImage() {
         _capturedImage.value = null
         _detectedNutrients.value = emptyList()
@@ -335,7 +343,7 @@ class ScannerViewModel @Inject constructor(
     }
 
 
-    // --- TAMBAH: Fungsi untuk Mengedit Angka secara Manual ---
+    //  Fungsi untuk Mengedit Angka secara Manual ---
     fun updateNutrientValue(displayName: String, newValue: Float) {
 
         _detectedNutrients.value =

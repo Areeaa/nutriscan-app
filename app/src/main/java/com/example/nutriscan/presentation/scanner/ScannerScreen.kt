@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.nutriscan.presentation.theme.PrimaryTeal
+import com.example.nutriscan.presentation.theme.GradientHeroVertical
 import com.example.nutriscan.util.capturePhoto
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,94 +36,108 @@ fun ScannerScreen(
     onNavigateBack: () -> Unit,
     onNavigateToResult: () -> Unit
 ) {
-    val context = LocalContext.current
+    val context      = LocalContext.current
     val capturedImage by viewModel.capturedImage.collectAsState()
-    val isProcessing by viewModel.isProcessing.collectAsState()
+    val isProcessing  by viewModel.isProcessing.collectAsState()
 
+    // Camera permission
     var hasCameraPermission by remember {
-        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED
+        )
     }
-
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { granted -> hasCameraPermission = granted }
-    )
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> hasCameraPermission = granted }
 
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    // --- STATE UNTUK SENTER TETAP ADA ---
+    // Flash + capture
     var isLedFlashOn by remember { mutableStateOf(false) }
-    val imageCapture = remember { ImageCapture.Builder().build() }
-
+    val imageCapture  = remember { ImageCapture.Builder().build() }
     LaunchedEffect(isLedFlashOn) {
-        imageCapture.flashMode = if (isLedFlashOn) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
+        imageCapture.flashMode =
+            if (isLedFlashOn) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
     }
 
+    // Gallery picker
     val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
-            if (uri != null) {
-                if (!viewModel.onImageSelectedFromGallery(context, uri)) {
-                    Toast.makeText(context, "Gagal memproses gambar", Toast.LENGTH_SHORT).show()
-                }
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            if (!viewModel.onImageSelectedFromGallery(context, uri)) {
+                Toast.makeText(context, "Gagal memproses gambar", Toast.LENGTH_SHORT).show()
             }
         }
-    )
+    }
 
+    // Capture flash animation
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
     var isFlashing by remember { mutableStateOf(false) }
     val flashAlpha by animateFloatAsState(
         targetValue = if (isFlashing) 1f else 0f,
-        animationSpec = tween(durationMillis = 150), label = "Flash"
+        animationSpec = tween(150), label = "Flash"
     )
 
-    if (hasCameraPermission) {
-        if (capturedImage == null) {
+    when {
+        !hasCameraPermission -> {
+            // ── Permission denied UI ──
+            Box(
+                modifier = Modifier.fillMaxSize().background(brush = GradientHeroVertical),
+                contentAlignment = Alignment.Center
+            ) {
+                Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                    Text("Izinkan Akses Kamera")
+                }
+            }
+        }
+
+        capturedImage == null -> {
+            // ── Camera viewfinder ──
             ScannerContent(
-                imageCapture = imageCapture,
-                flashAlpha = flashAlpha,
-                isFlashOn = isLedFlashOn,
-                onFlashToggle = { isLedFlashOn = !isLedFlashOn },
+                imageCapture   = imageCapture,
+                flashAlpha     = flashAlpha,
+                isFlashOn      = isLedFlashOn,
+                onFlashToggle  = { isLedFlashOn = !isLedFlashOn },
                 onNavigateBack = onNavigateBack,
                 onGalleryClick = {
-                    photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
                 },
                 onScanClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     coroutineScope.launch {
                         isFlashing = true; delay(100); isFlashing = false
                         capturePhoto(
-                            context = context,
+                            context      = context,
                             imageCapture = imageCapture,
-                            onSuccess = { bitmap -> viewModel.onImageCaptured(bitmap) },
-                            onError = { Toast.makeText(context, "Gagal menjepret", Toast.LENGTH_SHORT).show() }
+                            onSuccess    = { bitmap -> viewModel.onImageCaptured(bitmap) },
+                            onError      = { Toast.makeText(context, "Gagal menjepret foto", Toast.LENGTH_SHORT).show() }
                         )
                     }
                 }
             )
-        } else {
-            // DIKEMBALIKAN KE PREVIEW SEDERHANA
-            ImagePreviewContent(
-                bitmap = capturedImage!!,
+        }
+
+        else -> {
+            // ── Image Editor (crop + rotate) ──
+            ImageEditorContent(
+                bitmap      = capturedImage!!,
                 isProcessing = isProcessing,
-                onRetake = { viewModel.clearCapturedImage() },
-                onConfirm = {
-                    if (!isProcessing) {
-                        viewModel.processConfirmedImage {
-                            onNavigateToResult()
-                        }
+                onRetake    = { viewModel.clearCapturedImage() },
+                onConfirm   = { editedBitmap ->
+                    // Store the cropped/rotated result, then kick off OCR
+                    viewModel.onEditedImageConfirmed(editedBitmap)
+                    viewModel.processConfirmedImage {
+                        onNavigateToResult()
                     }
                 }
             )
-        }
-    } else {
-        Box(modifier = Modifier.fillMaxSize().background(PrimaryTeal), contentAlignment = Alignment.Center) {
-            Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
-                Text("Izinkan Kamera")
-            }
         }
     }
 }
@@ -138,20 +152,46 @@ fun ScannerContent(
     onGalleryClick: () -> Unit,
     onScanClick: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize().background(PrimaryTeal)) {
-        Box(modifier = Modifier.fillMaxSize().padding(top = 40.dp, start = 16.dp, end = 16.dp, bottom = 80.dp).clip(RoundedCornerShape(24.dp)).background(Color.Black)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(brush = GradientHeroVertical)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 40.dp, start = 16.dp, end = 16.dp, bottom = 80.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.Black)
+        ) {
             CameraPreview(imageCapture = imageCapture, modifier = Modifier.fillMaxSize())
 
             ScannerTopBar(
-                onNavigateBack = onNavigateBack, onGalleryClick = onGalleryClick,
-                isFlashOn = isFlashOn, onFlashClick = onFlashToggle,
-                modifier = Modifier.align(Alignment.TopCenter)
+                onNavigateBack = onNavigateBack,
+                onGalleryClick = onGalleryClick,
+                isFlashOn      = isFlashOn,
+                onFlashClick   = onFlashToggle,
+                modifier       = Modifier.align(Alignment.TopCenter)
             )
-            ScannerInstructionTooltip(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp))
+
+            ScannerInstructionTooltip(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 48.dp)
+            )
         }
-        ScannerFab(onScanClick = onScanClick, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp))
+
+        ScannerFab(
+            onScanClick = onScanClick,
+            modifier    = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp)
+        )
+
         if (flashAlpha > 0f) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = flashAlpha)))
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White.copy(alpha = flashAlpha))
+            )
         }
     }
 }

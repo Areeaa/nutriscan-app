@@ -5,124 +5,130 @@ object NutritionDictionary {
     val nutrientAliases: Map<String, List<String>> = mapOf(
 
         "Energi Total" to listOf(
-            // Indonesia
             "energi total",
             "total energi",
             "jumlah energi",
-            "energi",
             "kalori total",
             "total kalori",
-            "kalori",
-            // English
             "total energy",
             "energy total",
-            "calories",
             "total calories",
+            "calories",
             "calorie",
-            "kcal total",
-            // OCR typo variants
+            "energi",           // cukup aman: satu-satunya field dengan unit kkal
+            "energy",
+            "kalori",
+            // OCR typo
             "energ1 total",
             "energi tot",
-            "total energ"
+            "total energ",
+            "kcal total"
         ),
 
+        // ── "Energi dari Lemak" HARUS sebelum "Lemak Total"
+        // ── agar sliding-window match "energi" tidak dirampas "Lemak Total"
         "Energi dari Lemak" to listOf(
-            // Indonesia
             "energi dari lemak",
             "kalori dari lemak",
             "energi lemak",
-            // English
             "energy from fat",
             "calories from fat",
             "cal from fat",
-            // OCR typo variants
+            // OCR typo
             "energi dar lemak",
             "energi dr lemak",
-            "energ dari lemak"
+            "energ dari lemak",
+            "energy fr fat"
         ),
 
-        "Lemak Total" to listOf(
-            // Indonesia
-            "lemak total",
-            "total lemak",
-            "jumlah lemak",
-            "lemak",
-            // English
-            "total fat",
-            "fat total",
-            "fat",
-            // OCR typo variants
-            "lemak tot",
-            "total lmak",
-            "lemak tota"
-        ),
-
+        // ── "Lemak Jenuh" HARUS sebelum "Lemak Total"
+        // ── agar baris "lemak jenuh" tidak juga mencocokkan "Lemak Total"
         "Lemak Jenuh" to listOf(
-            // Indonesia
-            "lemak jenuh",
-            "jenuh",
             "lemak jenuh total",
             "total lemak jenuh",
-            // English
+            "lemak jenuh",
             "saturated fat",
             "saturated",
-            "sat fat",
             "sat. fat",
-            // OCR typo variants
+            "sat fat",
+            // OCR typo
             "lemak jenh",
             "lemak jenu",
-            "saturated fa"
+            "saturated fa",
+            "lmak jenuh",
+            "lemak jenu h"
         ),
 
         "Lemak Tidak Jenuh" to listOf(
-            // Indonesia
             "lemak tidak jenuh",
             "lemak tak jenuh",
             "tidak jenuh",
-            // English
+            "lemak trans",
             "unsaturated fat",
             "unsaturated",
             "trans fat",
-            "lemak trans"
+            // OCR typo
+            "lemak tdk jenuh",
+            "trans fa"
+        ),
+
+        // ── Baru setelah "Lemak Jenuh" dan "Energi dari Lemak" didefinisikan,
+        // ── alias pendek "lemak" dan "fat" aman dipakai HANYA jika baris tidak
+        // ── lebih cocok ke alias di atas (dijaga oleh logika best-match di ViewModel).
+        "Lemak Total" to listOf(
+            "lemak total",
+            "total lemak",
+            "jumlah lemak",
+            "total fat",
+            "fat total",
+            // Alias pendek — tetap ada sebagai fallback, dijaga best-match
+            "lemak",
+            "fat",
+            // OCR typo
+            "lemak tot",
+            "total lmak",
+            "lemak tota",
+            "lemak tot al",
+            "total fa t"
         ),
 
         "Karbohidrat Total" to listOf(
-            // Indonesia
             "karbohidrat total",
             "total karbohidrat",
             "jumlah karbohidrat",
-            "karbohidrat",
-            "karbo total",
-            "karbo",
-            // English
             "total carbohydrate",
             "total carbohydrates",
+            "carbohydrate total",
+            "carbohydrates total",
+            // Alias pendek — dijaga best-match
+            "karbohidrat",
             "carbohydrate",
             "carbohydrates",
-            "carbs",
+            "karbo total",
             "total carbs",
-            // OCR typo variants
+            // OCR typo
             "karbohidrat tot",
             "karbohidra total",
             "total karbohidr",
-            "karbohidtat total"
+            "karbohidtat total",
+            "karboh total",
+            "carbohydrat total"
         ),
 
         "Gula" to listOf(
-            // Indonesia
-            "gula",
             "gula total",
             "total gula",
-            "kandungan gula",
             "gula tambahan",
-            // English
-            "sugar",
-            "sugars",
+            "kandungan gula",
             "total sugar",
             "total sugars",
             "added sugar",
             "added sugars",
-            // OCR typo variants
+            // Alias pendek
+            "gula",
+            "sugar",
+            "sugars",
+            // OCR typo
             "gul4",
             "gula tot",
             "sug4r",
@@ -130,75 +136,73 @@ object NutritionDictionary {
         ),
 
         "Serat" to listOf(
-            // Indonesia
-            "serat",
             "serat pangan",
             "serat makanan",
-            "total serat",
             "serat total",
+            "total serat",
             "serat kasar",
-            // English
             "dietary fiber",
-            "fibre",
-            "fiber",
-            "total fiber",
             "dietary fibre",
-            // OCR typo variants
+            "total fiber",
+            "total fibre",
+            // Alias pendek
+            "serat",
+            "fiber",
+            "fibre",
+            // OCR typo
             "serat panga",
-            "serat panga",
-            "dietary fib"
+            "dietary fib",
+            "serat panga n"
         ),
 
         "Protein" to listOf(
-            // Indonesia
-            "protein",
-            "total protein",
             "protein total",
+            "total protein",
             "kandungan protein",
-            // English
+            // Alias pendek — unik, tidak muncul di alias lain
             "protein",
             "proteins",
-            "total protein",
-            // OCR typo variants
+            // OCR typo
             "prote1n",
             "prot ein",
-            "proteín"
+            "proteín",
+            "prot ein"
         ),
 
         "Natrium" to listOf(
-            // Indonesia
-            "natrium",
-            "garam",
+            "natrium total",
+            "total natrium",
             "garam (natrium)",
             "natrium (garam)",
             "kandungan natrium",
-            "total natrium",
-            "natrium total",
-            // English
-            "sodium",
-            "salt",
+            "garam(natrium)",
+            "natrium(garam)",
+            "sodium total",
+            "total sodium",
             "salt (sodium)",
             "sodium (salt)",
-            "total sodium",
-            "sodium total",
-            // OCR typo variants
+            // Alias pendek
+            "natrium",
+            "sodium",
+            "garam",
+            "salt",
+            // OCR typo
             "natr1um",
             "natriu",
             "sod1um",
-            "natrium(garam)",
-            "garam(natrium)"
+            "sod ium"
         ),
 
         "Kolesterol" to listOf(
-            // Indonesia
-            "kolesterol",
-            "total kolesterol",
             "kolesterol total",
-            // English
-            "cholesterol",
+            "total kolesterol",
             "total cholesterol",
+            "cholesterol total",
+            // Alias pendek
+            "kolesterol",
+            "cholesterol",
             "chol",
-            // OCR typo variants
+            // OCR typo
             "kolestero",
             "kolesteral",
             "cholestero"
